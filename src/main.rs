@@ -18,8 +18,8 @@ struct ClientArgs {
 struct ServerArgs {
     #[clap(short, long)]
     port: Option<String>,
-    #[clap(short,long)]
-    download_directory: Option<String>
+    #[clap(short, long)]
+    download_directory: Option<String>,
 }
 #[derive(Subcommand, Debug, Clone)]
 pub enum Mode {
@@ -52,25 +52,23 @@ async fn main() {
                 sequence_tx: tx,
             };
             let mut server = adrnaln::server::Server::new(config);
-            tokio::spawn(
-                {
-                    let download_directory = args.download_directory.clone();
-                    async move {
-                        loop {
-                            match rx.recv().await {
-                                None => {}
-                                Some(seq) => {
-                                    let mut path = ".";
-                                    if !download_directory.is_none() {
-                                        path = download_directory.as_ref().unwrap().as_str();
-                                    }
-                                    write_sequence_to_file(path, seq).await
-                                },
+            tokio::spawn({
+                let download_directory = args.download_directory.clone();
+                async move {
+                    loop {
+                        match rx.recv().await {
+                            None => {}
+                            Some(seq) => {
+                                let mut path = ".";
+                                if !download_directory.is_none() {
+                                    path = download_directory.as_ref().unwrap().as_str();
+                                }
+                                write_sequence_to_file(path, seq).await
                             }
                         }
                     }
-
-                });
+                }
+            });
 
             server.start(kill_rx).await;
         }

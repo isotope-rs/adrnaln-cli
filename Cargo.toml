@@ -9,3 +9,9 @@ edition = "2021"
 adrnaln = "0.1.1"
 clap = {  version="4.5.4" }
 tokio = "1.37.0"
+tracing-subscriber = "0.3.18"
+opentelemetry = "0.17.0"
+# Integration between the tracing crate and the opentelemetry crate
+tracing-opentelemetry = "0.17.2"
+# Allows you to export data to Jaeger
+opentelemetry-jaeger = "0.16.0"

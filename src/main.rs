@@ -3,7 +3,11 @@ use std::path::Path;
 use adrnaln::client::sequence::Sequence;
 use adrnaln::config::Addresses;
 use clap::{Parser, Subcommand};
+use opentelemetry::global;
 use tokio::fs;
+use tracing_subscriber::fmt;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 #[derive(Debug, clap::Args, Clone)]
 struct ClientArgs {
@@ -34,8 +38,20 @@ pub struct Args {
 }
 #[tokio::main]
 async fn main() {
-    let ars = Args::parse();
+    global::set_text_map_propagator(opentelemetry_jaeger::Propagator::new());
+    let tracer = opentelemetry_jaeger::new_pipeline()
+        .with_service_name("adrnaln-cli")
+        .install_simple()
+        .unwrap();
 
+    let opentelemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+    tracing_subscriber::registry()
+        .with(opentelemetry)
+        // Continue logging to stdout
+        .with(fmt::Layer::default())
+        .try_init()
+        .unwrap();
+    let ars = Args::parse();
     match ars.mode {
         Mode::Server(args) => {
             if args.port.is_none() {
